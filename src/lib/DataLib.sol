@@ -11,6 +11,12 @@ struct OrderParameters {
   address taker;
   Item[] senderItem;
   Item[] takerItem;
+  OrderType orderType;
+}
+
+enum OrderType {
+  OPEN,
+  RESTRICTED
 }
 
 struct Item {
@@ -21,7 +27,7 @@ struct Item {
 }
 
 enum ItemType {
-  ETH,
+  NATIVE,
   ERC20,
   ERC721,
   ERC1155
