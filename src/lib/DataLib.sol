@@ -12,11 +12,15 @@ struct OrderParameters {
   Item[] senderItem;
   Item[] takerItem;
   OrderType orderType;
+  uint256 startTime;
+  uint256 endTime;
+  uint256 nonce;
 }
 
 enum OrderType {
-  OPEN,
-  RESTRICTED
+  OPEN, // anyone can execute
+  PARTIAL, // anyone can execute a partial of a trade must be each item same price
+  RESTRICTED // restricted to the taker address
 }
 
 struct Item {
