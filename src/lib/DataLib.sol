@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
 struct Order {
@@ -9,9 +9,10 @@ struct Order {
 struct OrderParameters {
   address sender;
   address taker;
+  OrderType orderType;
+  Direction direction;
   Item[] senderItem;
   Item[] takerItem;
-  OrderType orderType;
   uint256 startTime;
   uint256 endTime;
   uint256 nonce;
@@ -35,4 +36,9 @@ enum ItemType {
   ERC20,
   ERC721,
   ERC1155
+}
+
+enum Direction {
+  BUY,
+  SELL
 }

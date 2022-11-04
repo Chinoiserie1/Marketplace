@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
 contract TransferManager {
@@ -19,6 +19,7 @@ contract TransferManager {
     assembly {
       let callstatus := call(gas(), _to, _amount, 0, 0, 0, 0)
       if iszero(callstatus) {
+        // abi.encodeWithSignature("FailTransferETH()")
         mstore(0x00, 0x609c701500000000000000000000000000000000000000000000000000000000)
         revert(0, 4)
       }
