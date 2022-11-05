@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import { TestERC20 } from "./TestERC20.sol";
-
 import "../lib/forge-std/src/Test.sol";
-import "../src/Marketplace.sol";
+
+import { TestERC20 } from "./TestERC20.sol";
+import { TestERC721 } from "./TestERC721.sol";
+import { TestERC1155 } from "./TestERC1155.sol";
+
+import { Marketplace } from "../src/Marketplace.sol";
 
 import {
   Order,
@@ -17,6 +20,9 @@ import {
 
 contract MarketplaceTest is Test {
   Marketplace public marketplace;
+  TestERC20 public testERC20;
+  TestERC721 public testERC721;
+  TestERC1155 public testERC1155;
   // OrderParameters orderParams;
   // OrderType orderType;
   // Item item;
