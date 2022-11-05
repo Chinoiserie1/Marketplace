@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
+
+import { TestERC20 } from "./TestERC20.sol";
 
 import "../lib/forge-std/src/Test.sol";
 import "../src/Marketplace.sol";
@@ -21,7 +23,7 @@ contract MarketplaceTest is Test {
   // ItemType itemType;
   // Direction direction;
 
-  function setOrderParams(
+  function _setOrderParams(
     address sender,
     address taker,
     OrderType orderT,
@@ -31,18 +33,18 @@ contract MarketplaceTest is Test {
     uint256 startTime,
     uint256 endTime,
     uint256 nonce
-  ) internal returns (OrderParameters memory) {
+  ) internal pure returns (OrderParameters memory) {
     return OrderParameters(
       sender, taker, orderT, dir, itemSender, itemTaker, startTime, endTime, nonce
     );
   }
 
-  function setItem(
+  function _setItem(
     address token,
     ItemType itemType,
     uint256 startAmount,
     uint256 endAmount
-  ) internal returns(Item memory) {
+  ) internal pure returns(Item memory) {
     return Item(token, itemType, startAmount, endAmount);
   }
 
