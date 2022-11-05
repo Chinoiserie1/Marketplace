@@ -13,6 +13,16 @@ contract Conduit is TransferManager {
   function transferERC20(address _token, address _from, address _to, uint256 _amount) external {
     _transferERC20(_token, _from, _to, _amount);
   }
+  function transferERC721(address _token, address _from, address _to, uint256 _id) external {
+    _transferERC721(_token, _from, _to, _id);
+  }
+  function transferERC1155(
+    address _token, address _from, address _to, uint256 _id, uint256 _amount
+  )
+    external
+  {
+    _transferERC1155(_token, _from, _to, _id, _amount);
+  }
 }
 
 contract TransferManagerTest is Test, TransferManager {
@@ -41,6 +51,8 @@ contract TransferManagerTest is Test, TransferManager {
     conduit = new Conduit();
 
     testERC20.approve(address(conduit), 2 ether);
+    testERC721.approve(address(conduit), 1);
+    testERC1155.setApprovalForAll(address(conduit), true);
   }
 
   function testTransferERC20() public {
@@ -51,5 +63,25 @@ contract TransferManagerTest is Test, TransferManager {
     conduit.transferERC20(address(testERC20), owner, user1, 1 ether);
     uint256 amountAfterTransfer = testERC20.balanceOf(user1);
     require(amountAfterTransfer == 1 ether, "Failed to transfer funds");
+  }
+
+  function testTransferERC721() public {
+    vm.stopPrank();
+    uint256 amountBeforeTransfer = testERC721.balanceOf(user1);
+    require(amountBeforeTransfer == 0, "Should equal zero");
+    vm.prank(user1);
+    conduit.transferERC721(address(testERC721), owner, user1, 1);
+    uint256 amountAfterTransfer = testERC721.balanceOf(user1);
+    require(amountAfterTransfer == 1, "Failed to transfer ERC721");
+  }
+
+  function testTransferERC1155() public {
+    vm.stopPrank();
+    uint256 amountBeforeTransfer = testERC1155.balanceOf(user1, 0);
+    require(amountBeforeTransfer == 0, "Should equal zero");
+    vm.prank(user1);
+    conduit.transferERC1155(address(testERC1155), owner, user1, 0, 50);
+    uint256 amountAfterTransfer = testERC1155.balanceOf(user1, 0);
+    require(amountAfterTransfer == 50, "Failed to transfer ERC1155");
   }
 }

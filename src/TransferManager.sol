@@ -36,6 +36,8 @@ contract TransferManager {
       if iszero(callstatus) {
         revert (0x00, returndatasize())
       }
+      // restore zero
+      mstore(0x00, 0)
     }
   }
 
@@ -49,20 +51,37 @@ contract TransferManager {
       if iszero(callstatus) {
         revert (0x00, returndatasize())
       }
+      // restore zero
+      mstore(0x00, 0)
     }
   }
 
-  function _transferERC1155(address _token, address _from, address _to, uint256 _id, uint256 _amount) internal {
+  function _transferERC1155(
+    address _token, address _from, address _to, uint256 _id, uint256 _amount
+  )
+    internal
+  {
     assembly {
+      // overide this slot with calldata restore after
+      let slot0x80 := mload(0x80)
+      let slot0xA0 := mload(0xA0)
+      let slot0xC0 := mload(0xC0)
       mstore(0x00, ERC1155_safeTransferFrom_sign)
       mstore(0x04, _from)
       mstore(0x24, _to)
       mstore(0x44, _id)
       mstore(0x64, _amount)
-      let callstatus := call(gas(), _token, 0, 0x00, 0x84, 0x00, 0x20)
+      mstore(0x84, 0xa0)
+      mstore(0xa4, 0)
+      let callstatus := call(gas(), _token, 0, 0x00, 0xc4, 0x00, 0x20)
       if iszero(callstatus) {
         revert (0x00, returndatasize())
       }
+      // restore memory & zero
+      mstore(0x80, slot0x80)
+      mstore(0xA0, slot0xA0)
+      mstore(0xC0, slot0xC0)
+      mstore(0x00, 0)
     }
   }
 }
