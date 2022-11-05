@@ -3,9 +3,9 @@ pragma solidity ^0.8.13;
 
 import "../lib/forge-std/src/Test.sol";
 
-import { TestERC20 } from "./TestERC20.sol";
-import { TestERC721 } from "./TestERC721.sol";
-import { TestERC1155 } from "./TestERC1155.sol";
+import { TestERC20 } from "./token/TestERC20.sol";
+import { TestERC721 } from "./token/TestERC721.sol";
+import { TestERC1155 } from "./token/TestERC1155.sol";
 
 import { Marketplace } from "../src/Marketplace.sol";
 
