@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
+/** 
+ * @title TransferManager
+ * @author chixx.eth
+ * @notice Internal function for transfer tokens [ETH, ERC20, ERC115, ERC721]
+ * @dev Using assembly to perfom calls
+ *      use scratch space to store calldata parameters
+ *      restore free memory ptr [0x40], zero slot [0x60] and slots after zero slot
+*/
 contract TransferManager {
   // abi.encodeWithSignature("transferFrom(address,address,uint256)")
   uint256 constant ERC20_transferfrom_sign = (
@@ -36,8 +44,9 @@ contract TransferManager {
       if iszero(callstatus) {
         revert (0x00, returndatasize())
       }
-      // restore zero
-      mstore(0x00, 0)
+      // restore zero && free memory ptr
+      mstore(0x40, 0x80)
+      mstore(0x60, 0)
     }
   }
 
@@ -51,8 +60,9 @@ contract TransferManager {
       if iszero(callstatus) {
         revert (0x00, returndatasize())
       }
-      // restore zero
-      mstore(0x00, 0)
+      // restore zero && free memory ptr
+      mstore(0x40, 0x80)
+      mstore(0x60, 0)
     }
   }
 
@@ -62,7 +72,7 @@ contract TransferManager {
     internal
   {
     assembly {
-      // overide this slot with calldata restore after
+      // save slots [0x80-0xa0-0xc0]
       let slot0x80 := mload(0x80)
       let slot0xA0 := mload(0xA0)
       let slot0xC0 := mload(0xC0)
@@ -77,11 +87,12 @@ contract TransferManager {
       if iszero(callstatus) {
         revert (0x00, returndatasize())
       }
-      // restore memory & zero
+      // restore memory, zero slot & free memory ptr
+      mstore(0x40, 0x80)
       mstore(0x80, slot0x80)
-      mstore(0xA0, slot0xA0)
-      mstore(0xC0, slot0xC0)
-      mstore(0x00, 0)
+      mstore(0xa0, slot0xA0)
+      mstore(0xc0, slot0xC0)
+      mstore(0x60, 0)
     }
   }
 }
