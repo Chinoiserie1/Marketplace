@@ -8,6 +8,7 @@ import { TestERC721 } from "./token/TestERC721.sol";
 import { TestERC1155 } from "./token/TestERC1155.sol";
 
 import { Marketplace } from "../src/Marketplace.sol";
+import "../src/Verification.sol";
 
 import {
   Order,
@@ -23,11 +24,14 @@ contract MarketplaceTest is Test {
   TestERC20 public testERC20;
   TestERC721 public testERC721;
   TestERC1155 public testERC1155;
-  // OrderParameters orderParams;
-  // OrderType orderType;
-  // Item item;
-  // ItemType itemType;
-  // Direction direction;
+
+  uint256 internal ownerPrivateKey;
+  address internal owner;
+  uint256 internal user1PrivateKey;
+  address internal user1;
+  uint256 internal user2PrivateKey;
+  address internal user2;
+
 
   function _setOrderParams(
     address sender,
@@ -55,13 +59,49 @@ contract MarketplaceTest is Test {
   }
 
   function setUp() public {
+    ownerPrivateKey = 0xA11CE;
+    owner = vm.addr(ownerPrivateKey);
+    user1PrivateKey = 0xB0B;
+    user1 = vm.addr(user1PrivateKey);
+    user2PrivateKey = 0xFED;
+    user2 = vm.addr(user2PrivateKey);
+    vm.startPrank(owner);
+
     marketplace = new Marketplace();
+    testERC20 = new TestERC20();
+    testERC721 = new TestERC721();
+    testERC1155 = new TestERC1155();
   }
 
   function testIni() public {
     Order memory order;
-    // order.parameters = setOrderParams();
-    console.logBytes(abi.encodeWithSignature("FailTransferETH()"));
-    marketplace.matchOrder(order);
+    OrderParameters memory orderParams;
+
+    OrderType orderT = OrderType.OPEN;
+    Direction dir = Direction.BUY;
+
+    ItemType itemtype = ItemType.ERC20;
+    Item[] memory itemTaker = new Item[](1);
+    itemTaker[0] = _setItem(address(testERC20), itemtype, 1 ether, 1 ether);
+
+    itemtype = ItemType.ERC721;
+    Item[] memory itemSender = new Item[](1);
+    itemSender[0] = _setItem(address(testERC721), itemtype, 1 ether, 1 ether);
+
+    uint256 time = block.timestamp;
+    order.parameters = _setOrderParams(
+      owner, user1, orderT, dir, itemTaker, itemSender, time, time * 2, 1
+    );
+    // order.signature = bytes(0xA0000000000000000000000000000000000000000000000000000000000FFF00);
+
+    marketplace.fillOrder(order);
+    marketplace._prepareForFullfillment(order.parameters);
   }
+
+  function testDisplay() public {
+    console.logBytes(abi.encodeWithSignature("FailTransferETH()"));
+    console.logBytes(abi.encodeWithSignature("InvalidSignature()"));
+    console.logBytes32(keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"));
+    console.logBytes32(Verification._deriveTypeHash());
+ }
 }
