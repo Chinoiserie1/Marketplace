@@ -37,9 +37,14 @@ contract Marketplace {
   }
 
   function fillOrder(Order calldata order) external payable returns (bool) {
-    // first verify signature is valid
+    // verify signature is valid
+    bytes32 orderHash = Verification._getOrderHash(order.parameters);
+    bytes32 digest = Verification._getHash(DOMAIN_SEPARATOR, orderHash);
+    address signer = Verification._verifySignature(digest, order.signature);
+    console.log("signer in contract = ");
+    console.log(signer);
     
-    // second check if order can be fullfill
+    // check if order can be fullfill
 
     // performs transfer
     return true;
@@ -59,13 +64,13 @@ contract Marketplace {
  * [0x124 - 0x144] nonce
 */
   function _prepareForFullfillment(OrderParameters calldata params) public {
-    bytes32 res;
+    // bytes32 res;
     assembly {
       // let ptr := mload(0x40)
       // calldatacopy(ptr, 0x00, calldatasize())
       // res := mload(add(ptr, 0x204))
     }
-    console.logBytes32(res);
+    // console.logBytes32(res);
   }
 }
 

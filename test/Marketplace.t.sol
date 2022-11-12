@@ -32,6 +32,8 @@ contract MarketplaceTest is Test {
   uint256 internal user2PrivateKey;
   address internal user2;
 
+  bytes32 DOMAIN_SEPARATOR;
+
 
   function _setOrderParams(
     address sender,
@@ -71,12 +73,12 @@ contract MarketplaceTest is Test {
     testERC20 = new TestERC20();
     testERC721 = new TestERC721();
     testERC1155 = new TestERC1155();
+    DOMAIN_SEPARATOR = marketplace.DOMAIN_SEPARATOR();
   }
 
   function testIni() public {
     Order memory order;
     OrderParameters memory orderParams;
-
     OrderType orderT = OrderType.OPEN;
     Direction dir = Direction.BUY;
 
@@ -86,12 +88,21 @@ contract MarketplaceTest is Test {
 
     itemtype = ItemType.ERC721;
     Item[] memory itemSender = new Item[](1);
-    itemSender[0] = _setItem(address(testERC721), itemtype, 1 ether, 1 ether);
+    itemSender[0] = _setItem(address(testERC721), itemtype, 1, 1);
 
     uint256 time = block.timestamp;
     order.parameters = _setOrderParams(
       owner, user1, orderT, dir, itemTaker, itemSender, time, time * 2, 1
     );
+    bytes32 orderHash = Verification._getOrderHash(order.parameters);
+    bytes32 digest = Verification._getHash(DOMAIN_SEPARATOR, orderHash);
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
+    address signer = ecrecover(digest, v, r, s);
+    require(signer == owner, "signture not valid");
+
+    order.signature = abi.encodePacked(r, s, v);
+    console.log("sign = ");
+    console.logBytes(order.signature);
     // order.signature = bytes(0xA0000000000000000000000000000000000000000000000000000000000FFF00);
 
     marketplace.fillOrder(order);
