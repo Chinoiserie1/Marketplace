@@ -38,7 +38,7 @@ contract Marketplace {
 
   function fillOrder(Order calldata order) external payable returns (bool) {
     // verify signature is valid
-    bytes32 orderHash = Verification._getOrderHash(order.parameters);
+    bytes32 orderHash = Verification._deriveOrderParametersHash(order.parameters);
     bytes32 digest = Verification._getHash(DOMAIN_SEPARATOR, orderHash);
     address signer = Verification._verifySignature(digest, order.signature);
     console.log("signer in contract = ");

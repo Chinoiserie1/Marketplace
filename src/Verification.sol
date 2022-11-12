@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import { OrderParameters } from "./lib/DataLib.sol";
+import { OrderParameters, Item } from "./lib/DataLib.sol";
 
 library Verification {
   // abi.encodeWithSignature("InvalidSignature()")
@@ -14,43 +14,16 @@ library Verification {
     0xf8ad9242dd3e98a5031868445af9ec085ab809fa14b62836ca57efb2309948d5
   );
 
+  uint256 constant ITEM_TYPE_HASH = (
+    0x76d29e44f2cb5f4d768ba4888d763688dcbbc9092a29fceb4e9b46397171f4ce
+  );
+
   function _getHash(bytes32 _domainSeparator, bytes32 _messageHash) internal pure returns(bytes32 hash) {
     assembly {
       mstore(0x00, _domainSeparator)
       mstore(0x20, _messageHash)
       hash := keccak256(0x00, 0x40)
-      // mstore(0x00, keccak256(0x00, 0x40))
-      // return (0x00, 0x20)
     }
-  }
-
-  function _getOrderHash(OrderParameters calldata _params) public pure returns(bytes32) {
-    return (
-      keccak256(
-        bytes.concat(
-          abi.encode(
-            ORDER_TYPE_HASH,
-            _params.sender,
-            _params.taker,
-            _params.orderType,
-            _params.direction
-          ),
-          abi.encode(
-            keccak256(abi.encode(_params.senderItem)),
-            keccak256(abi.encode(_params.takerItem))
-          ),
-          // abi.encodePacked(
-          //   _params.senderItem,
-          //   _params.takerItem
-          // ),
-          abi.encode(
-            _params.startTime,
-            _params.endTime,
-            _params.nonce
-          )
-        )
-      )
-    );
   }
 
   function _verifySignature(bytes32 _digest, bytes memory _signature) internal pure returns(address) {
@@ -72,7 +45,49 @@ library Verification {
     return ecrecover(_digest, v, r, s);
   }
 
-  function _deriveTypeHash() internal pure returns(bytes32 orderTypehash) {
+  function _hashItem(Item memory _hashItem) internal returns(bytes32) {
+    return keccak256(
+      abi.encode(
+        ITEM_TYPE_HASH,
+        _hashItem.token,
+        _hashItem.itemType,
+        _hashItem.startAmount,
+        _hashItem.endAmount
+      )
+    );
+  }
+
+  function _deriveOrderParametersHash(OrderParameters calldata _params) public returns(bytes32) {
+    bytes32[] memory senderItemHash = new bytes32[](_params.senderItem.length);
+    bytes32[] memory takerItemHash = new bytes32[](_params.takerItem.length);
+
+    for (uint256 i; i < _params.senderItem.length; ) {
+      senderItemHash[i] = _hashItem(_params.senderItem[i]);
+      unchecked { ++i; }
+    }
+
+    for (uint256 i = 0; i < _params.takerItem.length; ) {
+      takerItemHash[i] = _hashItem(_params.takerItem[i]);
+      unchecked { ++i; }
+    }
+
+    return keccak256(
+      abi.encode(
+        ORDER_TYPE_HASH,
+        _params.sender,
+        _params.taker,
+        _params.orderType,
+        _params.direction,
+        keccak256(abi.encodePacked(senderItemHash)),
+        keccak256(abi.encodePacked(takerItemHash)),
+        _params.startTime,
+        _params.endTime,
+        _params.nonce
+      )
+    );
+  }
+
+  function _deriveTypeHash() internal pure returns(bytes32 orderTypehash, bytes32 itemHash) {
     bytes memory ItemTypeString = abi.encodePacked(
       "Item(",
         "address token,",
@@ -95,6 +110,8 @@ library Verification {
         "uint256 nonce",
       ")"
     );
+
+    itemHash = keccak256(ItemTypeString);
 
     orderTypehash = keccak256(
       abi.encodePacked(

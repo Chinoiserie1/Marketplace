@@ -94,7 +94,7 @@ contract MarketplaceTest is Test {
     order.parameters = _setOrderParams(
       owner, user1, orderT, dir, itemTaker, itemSender, time, time * 2, 1
     );
-    bytes32 orderHash = Verification._getOrderHash(order.parameters);
+    bytes32 orderHash = Verification._deriveOrderParametersHash(order.parameters);
     bytes32 digest = Verification._getHash(DOMAIN_SEPARATOR, orderHash);
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, digest);
     address signer = ecrecover(digest, v, r, s);
@@ -113,6 +113,7 @@ contract MarketplaceTest is Test {
     console.logBytes(abi.encodeWithSignature("FailTransferETH()"));
     console.logBytes(abi.encodeWithSignature("InvalidSignature()"));
     console.logBytes32(keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"));
-    console.logBytes32(Verification._deriveTypeHash());
+    (bytes32 orderTypehash, bytes32 itemHash) = Verification._deriveTypeHash();
+    console.logBytes32(itemHash);
  }
 }
