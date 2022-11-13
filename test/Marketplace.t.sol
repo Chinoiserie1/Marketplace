@@ -8,6 +8,7 @@ import { TestERC721 } from "./token/TestERC721.sol";
 import { TestERC1155 } from "./token/TestERC1155.sol";
 
 import { Marketplace } from "../src/Marketplace.sol";
+import { Conduit } from "../src/Conduit.sol";
 import "../src/Verification.sol";
 
 import {
@@ -21,6 +22,7 @@ import {
 
 contract MarketplaceTest is Test {
   Marketplace public marketplace;
+  Conduit public conduit;
   TestERC20 public testERC20;
   TestERC721 public testERC721;
   TestERC1155 public testERC1155;
@@ -70,10 +72,14 @@ contract MarketplaceTest is Test {
     vm.startPrank(owner);
 
     marketplace = new Marketplace();
+    conduit = new Conduit();
     testERC20 = new TestERC20();
     testERC721 = new TestERC721();
     testERC1155 = new TestERC1155();
     DOMAIN_SEPARATOR = marketplace.DOMAIN_SEPARATOR();
+
+    console.log(conduit.owner());
+    conduit.approveContract(address(marketplace));
   }
 
   function testIni() public {
@@ -112,6 +118,11 @@ contract MarketplaceTest is Test {
   function testDisplay() public {
     console.logBytes(abi.encodeWithSignature("FailTransferETH()"));
     console.logBytes(abi.encodeWithSignature("InvalidSignature()"));
+    console.logBytes(abi.encodeWithSignature("AccessDenied()"));
+    console.logBytes(abi.encodeWithSignature("OnlyOwner()"));
+    console.logBytes(abi.encodeWithSignature("Reantrancy()"));
+    console.logBytes32(keccak256("NewContractApproved(address)"));
+    console.logBytes32(keccak256("OwnershipTransfered(address,address)"));
     console.logBytes32(keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"));
     (bytes32 orderTypehash, bytes32 itemHash) = Verification._deriveTypeHash();
     console.logBytes32(itemHash);

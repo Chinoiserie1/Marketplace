@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
+import "../lib/forge-std/src/Test.sol";
+
 import { OrderParameters, Item } from "./lib/DataLib.sol";
 
 library Verification {
@@ -13,7 +15,7 @@ library Verification {
   uint256 constant ORDER_TYPE_HASH = (
     0xf8ad9242dd3e98a5031868445af9ec085ab809fa14b62836ca57efb2309948d5
   );
-
+  // keccak256("Item(address token,uint8 itemType,uint256 startAmount,uint256 endAmount)")
   uint256 constant ITEM_TYPE_HASH = (
     0x76d29e44f2cb5f4d768ba4888d763688dcbbc9092a29fceb4e9b46397171f4ce
   );
@@ -45,18 +47,32 @@ library Verification {
     return ecrecover(_digest, v, r, s);
   }
 
-  function _hashItem(Item memory _hashItem) internal returns(bytes32) {
-    return keccak256(
-      abi.encode(
-        ITEM_TYPE_HASH,
-        _hashItem.token,
-        _hashItem.itemType,
-        _hashItem.startAmount,
-        _hashItem.endAmount
-      )
-    );
+ /**
+  * @notice _hashItem hash item struct
+  * see { DataLib.sol }
+  * @dev 
+  *  return keccak256(
+  *    abi.encode(
+  *      ITEM_TYPE_HASH,
+  *      _hashItem.token,
+  *      _hashItem.itemType,
+  *      _hashItem.startAmount,
+  *      _hashItem.endAmount
+  *    )
+  *  );
+  */
+  function _hashItem(Item memory _hashItem) internal returns(bytes32 res) {
+    assembly {
+      mstore(0x00, mload(_hashItem)) // token addy
+      mstore(0x20, mload(add(_hashItem, 0x20))) // itemType
+      mstore(0x40, mload(add(_hashItem, 0x40))) // startAmount
+      mstore(0x60, mload(add(_hashItem, 0x60))) // endAmount
+      
+      res := keccak256(0x00, 0x80)
+    }
   }
 
+  // need to updtae to assembly 
   function _deriveOrderParametersHash(OrderParameters calldata _params) public returns(bytes32) {
     bytes32[] memory senderItemHash = new bytes32[](_params.senderItem.length);
     bytes32[] memory takerItemHash = new bytes32[](_params.takerItem.length);

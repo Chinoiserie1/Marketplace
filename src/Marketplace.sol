@@ -8,9 +8,11 @@ import {
   OrderParameters
 } from "./lib/DataLib.sol";
 
+import { Checker } from "./Checker.sol";
+
 import "./Verification.sol";
 
-contract Marketplace {
+contract Marketplace is Checker {
   bytes32 public DOMAIN_SEPARATOR;
 
   /**
@@ -32,7 +34,17 @@ contract Marketplace {
     return "Marketplace";
   }
 
-  function matchOrders(Order[] calldata order) external payable returns(bool) {
+  function matchOrder(Order calldata order) external payable returns(bool) {
+    // verify signature is valid
+    bytes32 orderHash = Verification._deriveOrderParametersHash(order.parameters);
+    bytes32 digest = Verification._getHash(DOMAIN_SEPARATOR, orderHash);
+    address signer = Verification._verifySignature(digest, order.signature);
+    console.log("signer in contract = ");
+    console.log(signer);
+    
+    // check if order can be fullfill
+
+    // performs transfer
     return true;
   }
 
@@ -45,8 +57,10 @@ contract Marketplace {
     console.log(signer);
     
     // check if order can be fullfill
+    _checkForFullFillOrder(order.parameters);
 
     // performs transfer
+
     return true;
   }
 /**
