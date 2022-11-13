@@ -56,10 +56,11 @@ contract MarketplaceTest is Test {
   function _setItem(
     address token,
     ItemType itemType,
+    uint256 tokenId,
     uint256 startAmount,
     uint256 endAmount
   ) internal pure returns(Item memory) {
-    return Item(token, itemType, startAmount, endAmount);
+    return Item(token, itemType, tokenId, startAmount, endAmount);
   }
 
   function setUp() public {
@@ -78,7 +79,7 @@ contract MarketplaceTest is Test {
     testERC1155 = new TestERC1155();
     DOMAIN_SEPARATOR = marketplace.DOMAIN_SEPARATOR();
 
-    console.log(conduit.owner());
+    // console.log(conduit.owner());
     conduit.approveContract(address(marketplace));
   }
 
@@ -90,15 +91,15 @@ contract MarketplaceTest is Test {
 
     ItemType itemtype = ItemType.ERC20;
     Item[] memory itemTaker = new Item[](1);
-    itemTaker[0] = _setItem(address(testERC20), itemtype, 1 ether, 1 ether);
+    itemTaker[0] = _setItem(address(testERC20), itemtype, 1, 1 ether, 1 ether);
 
     itemtype = ItemType.ERC721;
     Item[] memory itemSender = new Item[](1);
-    itemSender[0] = _setItem(address(testERC721), itemtype, 1, 1);
+    itemSender[0] = _setItem(address(testERC721), itemtype, 1, 1, 1);
 
     uint256 time = block.timestamp;
     order.parameters = _setOrderParams(
-      owner, user1, orderT, dir, itemTaker, itemSender, time, time * 2, 1
+      owner, user1, orderT, dir, itemSender, itemTaker, time, time * 2, 1
     );
     bytes32 orderHash = Verification._deriveOrderParametersHash(order.parameters);
     bytes32 digest = Verification._getHash(DOMAIN_SEPARATOR, orderHash);
@@ -107,12 +108,12 @@ contract MarketplaceTest is Test {
     require(signer == owner, "signture not valid");
 
     order.signature = abi.encodePacked(r, s, v);
-    console.log("sign = ");
-    console.logBytes(order.signature);
+    // console.log("sign = ");
+    // console.logBytes(order.signature);
     // order.signature = bytes(0xA0000000000000000000000000000000000000000000000000000000000FFF00);
 
-    marketplace.fillOrder(order);
-    marketplace._prepareForFullfillment(order.parameters);
+    marketplace.matchOrder(order);
+    // marketplace._prepareForFullfillment(order.parameters);
   }
 
   function testDisplay() public {
@@ -126,5 +127,6 @@ contract MarketplaceTest is Test {
     console.logBytes32(keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"));
     (bytes32 orderTypehash, bytes32 itemHash) = Verification._deriveTypeHash();
     console.logBytes32(itemHash);
+    console.logBytes32(orderTypehash);
  }
 }

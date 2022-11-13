@@ -11,13 +11,13 @@ library Verification {
     0x8baa579f00000000000000000000000000000000000000000000000000000000
   );
   // see { _deriveTypeHash }
-  // keccak256("OrderParameters(address sender,address taker,uint8 orderType,uint8 direction,Item[] senderItem,Item[] takerItem,uint256 startTime,uint256 endTime,uint256 nonce)Item(address token,uint8 itemType,uint256 startAmount,uint256 endAmount)")
+  // keccak256("OrderParameters(address sender,address taker,uint8 orderType,uint8 direction,Item[] senderItem,Item[] takerItem,uint256 startTime,uint256 endTime,uint256 nonce)Item(address token,uint8 itemType,uint256 tokenId,uint256 startAmount,uint256 endAmount)")
   uint256 constant ORDER_TYPE_HASH = (
-    0xf8ad9242dd3e98a5031868445af9ec085ab809fa14b62836ca57efb2309948d5
+    0x543240574b293148a4ac171ddfe0e857153886b6c3c279142bc0097e5917695e
   );
-  // keccak256("Item(address token,uint8 itemType,uint256 startAmount,uint256 endAmount)")
+  // keccak256("Item(address token,uint8 itemType,uint256 tokenId,uint256 startAmount,uint256 endAmount)")
   uint256 constant ITEM_TYPE_HASH = (
-    0x76d29e44f2cb5f4d768ba4888d763688dcbbc9092a29fceb4e9b46397171f4ce
+    0xacd6fbad9f86ff7747e34ec928b8f9a099ebc174972b72ebf359af972a8aec60
   );
 
   function _getHash(bytes32 _domainSeparator, bytes32 _messageHash) internal pure returns(bytes32 hash) {
@@ -56,6 +56,7 @@ library Verification {
   *      ITEM_TYPE_HASH,
   *      _hashItem.token,
   *      _hashItem.itemType,
+  *      _hashItem.tokenId,
   *      _hashItem.startAmount,
   *      _hashItem.endAmount
   *    )
@@ -63,12 +64,19 @@ library Verification {
   */
   function _hashItem(Item memory _hashItem) internal returns(bytes32 res) {
     assembly {
+      // let mem0x40 := mload(0x40)
+      let mem0x80 := mload(0x80)
+      ress := mload(add(_hashItem, 0x40))
       mstore(0x00, mload(_hashItem)) // token addy
       mstore(0x20, mload(add(_hashItem, 0x20))) // itemType
-      mstore(0x40, mload(add(_hashItem, 0x40))) // startAmount
-      mstore(0x60, mload(add(_hashItem, 0x60))) // endAmount
-      
-      res := keccak256(0x00, 0x80)
+      mstore(0x40, mload(add(_hashItem, 0x40))) // tokenId
+      mstore(0x60, mload(add(_hashItem, 0x60))) // startAmount
+      mstore(0x80, mload(add(_hashItem, 0x80))) // endAmount
+      res := keccak256(0x00, 0xa0)
+      // reset memory ptr, zero slot and mempointer
+      mstore(0x40, 0x80)
+      mstore(0x60, 0)
+      mstore(0x80, mem0x80)
     }
   }
 
@@ -77,14 +85,14 @@ library Verification {
     bytes32[] memory senderItemHash = new bytes32[](_params.senderItem.length);
     bytes32[] memory takerItemHash = new bytes32[](_params.takerItem.length);
 
-    for (uint256 i; i < _params.senderItem.length; ) {
+    for (uint256 i = 0; i < _params.senderItem.length; ++i) {
       senderItemHash[i] = _hashItem(_params.senderItem[i]);
-      unchecked { ++i; }
+      // unchecked { ++i; }
     }
 
-    for (uint256 i = 0; i < _params.takerItem.length; ) {
-      takerItemHash[i] = _hashItem(_params.takerItem[i]);
-      unchecked { ++i; }
+    for (uint256 y = 0; y < _params.takerItem.length; ++y) {
+      takerItemHash[y] = _hashItem(_params.takerItem[y]);
+      // unchecked { ++y; }
     }
 
     return keccak256(
@@ -108,6 +116,7 @@ library Verification {
       "Item(",
         "address token,",
         "uint8 itemType,",
+        "uint256 tokenId",
         "uint256 startAmount,",
         "uint256 endAmount",
       ")"
@@ -137,3 +146,27 @@ library Verification {
     );
   }
 }
+/**
+ * 0000000000000000000000000000000000000000000000000000000000000020
+ * 000000000000000000000000e05fcc23807536bee418f142d19fa0d21bb0cff7
+ * 0000000000000000000000000376aac07ad725e01357b1725b5cec61ae10473c
+ * 0000000000000000000000000000000000000000000000000000000000000000
+ * 0000000000000000000000000000000000000000000000000000000000000000
+ * 0000000000000000000000000000000000000000000000000000000000000120
+ * 00000000000000000000000000000000000000000000000000000000000001e0
+ * 0000000000000000000000000000000000000000000000000000000000000001
+ * 0000000000000000000000000000000000000000000000000000000000000002
+ * 0000000000000000000000000000000000000000000000000000000000000001
+ * 0000000000000000000000000000000000000000000000000000000000000001
+ * 000000000000000000000000f5b8a1ccf29cef7861a7b18c4bcd838341d10ff3
+ * 0000000000000000000000000000000000000000000000000000000000000001
+ * 0000000000000000000000000000000000000000000000000000000000000001
+ * 0000000000000000000000000000000000000000000000000de0b6b3a7640000
+ * 0000000000000000000000000000000000000000000000000de0b6b3a7640000
+ * 0000000000000000000000000000000000000000000000000000000000000001
+ * 0000000000000000000000001a4f38b8a89ffbe21ef07d0c85e71a1da5afd2b6
+ * 0000000000000000000000000000000000000000000000000000000000000002
+ * 0000000000000000000000000000000000000000000000000000000000000001
+ * 0000000000000000000000000000000000000000000000000000000000000001
+ * 0000000000000000000000000000000000000000000000000000000000000001
+ */

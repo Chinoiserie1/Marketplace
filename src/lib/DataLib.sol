@@ -27,6 +27,7 @@ enum OrderType {
 struct Item {
   address token;
   ItemType itemType;
+  uint256 tokenId;
   uint256 startAmount;
   uint256 endAmount;
 }

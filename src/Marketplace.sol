@@ -37,10 +37,10 @@ contract Marketplace is Checker {
   function matchOrder(Order calldata order) external payable returns(bool) {
     // verify signature is valid
     bytes32 orderHash = Verification._deriveOrderParametersHash(order.parameters);
-    bytes32 digest = Verification._getHash(DOMAIN_SEPARATOR, orderHash);
-    address signer = Verification._verifySignature(digest, order.signature);
-    console.log("signer in contract = ");
-    console.log(signer);
+    // bytes32 digest = Verification._getHash(DOMAIN_SEPARATOR, orderHash);
+    // address signer = Verification._verifySignature(digest, order.signature);
+    // console.log("signer in contract = ");
+    // console.log(signer);
     
     // check if order can be fullfill
 
@@ -48,21 +48,21 @@ contract Marketplace is Checker {
     return true;
   }
 
-  function fillOrder(Order calldata order) external payable returns (bool) {
-    // verify signature is valid
-    bytes32 orderHash = Verification._deriveOrderParametersHash(order.parameters);
-    bytes32 digest = Verification._getHash(DOMAIN_SEPARATOR, orderHash);
-    address signer = Verification._verifySignature(digest, order.signature);
-    console.log("signer in contract = ");
-    console.log(signer);
+  // function fillOrder(Order calldata order) external payable returns (bool) {
+  //   // verify signature is valid
+  //   bytes32 orderHash = Verification._deriveOrderParametersHash(order.parameters);
+  //   bytes32 digest = Verification._getHash(DOMAIN_SEPARATOR, orderHash);
+  //   address signer = Verification._verifySignature(digest, order.signature);
+  //   console.log("signer in contract = ");
+  //   console.log(signer);
     
-    // check if order can be fullfill
-    _checkForFullFillOrder(order.parameters);
+  //   // check if order can be fullfill
+  //   _checkForFullFillOrder(order.parameters);
 
-    // performs transfer
+  //   // performs transfer
 
-    return true;
-  }
+  //   return true;
+  // }
 /**
  * calldata {see Datalib.sol}
  * [0x00 - 0x04] name of the function
