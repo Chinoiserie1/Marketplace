@@ -49,10 +49,12 @@ contract Access {
       mstore(0x20, contractApproved.slot)
       let slotCaller := keccak256(0x00, 0x40)
       let approveSlotCaller := sload(slotCaller)
-      if iszero(approveSlotCaller) {
-        // abi.encodeWithSignature("AccessDenied()")
-        mstore(0x00, 0x4ca8886700000000000000000000000000000000000000000000000000000000)
-        revert(0x00, 4)
+      if iszero(eq(caller(), sload(owner.slot))) {
+        if iszero(approveSlotCaller) {
+          // abi.encodeWithSignature("AccessDenied()")
+          mstore(0x00, 0x4ca8886700000000000000000000000000000000000000000000000000000000)
+          revert(0x00, 4)
+        }
       }
     }
     _;

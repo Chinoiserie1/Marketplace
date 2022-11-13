@@ -32,14 +32,24 @@ contract Conduit is TransferManager, Access {
         _transferERC20(itemsSender[i].token, sender, receiver, itemsSender[i].startAmount);
       }
       if (itemsSender[i].itemType == ItemType.ERC721) {
-        _transferERC721(itemsSender[i].token, sender, receiver, itemsSender[i].startAmount);
+        _transferERC721(itemsSender[i].token, sender, receiver, itemsSender[i].tokenId);
       }
       if (itemsSender[i].itemType == ItemType.ERC1155) {
-        // _transferERC1155(itemsSender[i].token, sender, receiver, );
+        _transferERC1155(itemsSender[i].token, sender, receiver, itemsSender[i].tokenId, itemsSender[i].startAmount);
       }
-      unchecked {
-        ++i;
+      unchecked { ++i; }
+    }
+    for (uint256 i = 0; i < itemsTaker.length; ) {
+      if (itemsSender[i].itemType == ItemType.ERC20) {
+        _transferERC20(itemsSender[i].token, receiver, sender, itemsSender[i].startAmount);
       }
+      if (itemsSender[i].itemType == ItemType.ERC721) {
+        _transferERC721(itemsSender[i].token, receiver, sender, itemsSender[i].tokenId);
+      }
+      if (itemsSender[i].itemType == ItemType.ERC1155) {
+        _transferERC1155(itemsSender[i].token, receiver, sender, itemsSender[i].tokenId, itemsSender[i].startAmount);
+      }
+      unchecked { ++i; }
     }
   }
 }

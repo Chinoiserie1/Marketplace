@@ -62,21 +62,19 @@ library Verification {
   *    )
   *  );
   */
-  function _hashItem(Item memory _hashItem) internal returns(bytes32 res) {
+  function _hashItem(Item memory _hashItem) internal returns(bytes32 itemHash) {
     assembly {
-      // let mem0x40 := mload(0x40)
+      let mem0x40 := mload(0x40)
       let mem0x80 := mload(0x80)
-      ress := mload(add(_hashItem, 0x40))
       mstore(0x00, mload(_hashItem)) // token addy
       mstore(0x20, mload(add(_hashItem, 0x20))) // itemType
       mstore(0x40, mload(add(_hashItem, 0x40))) // tokenId
       mstore(0x60, mload(add(_hashItem, 0x60))) // startAmount
       mstore(0x80, mload(add(_hashItem, 0x80))) // endAmount
-      res := keccak256(0x00, 0xa0)
-      // reset memory ptr, zero slot and mempointer
-      mstore(0x40, 0x80)
-      mstore(0x60, 0)
-      mstore(0x80, mem0x80)
+      itemHash := keccak256(0x00, 0xa0) // cumpute hash
+      mstore(0x40, mem0x40) // reset memory ptr slot
+      mstore(0x60, 0) // reset zero slot
+      mstore(0x80, mem0x80) // reset mempointer
     }
   }
 
@@ -85,14 +83,14 @@ library Verification {
     bytes32[] memory senderItemHash = new bytes32[](_params.senderItem.length);
     bytes32[] memory takerItemHash = new bytes32[](_params.takerItem.length);
 
-    for (uint256 i = 0; i < _params.senderItem.length; ++i) {
+    for (uint256 i = 0; i < _params.senderItem.length; ) {
       senderItemHash[i] = _hashItem(_params.senderItem[i]);
-      // unchecked { ++i; }
+      unchecked { ++i; }
     }
 
-    for (uint256 y = 0; y < _params.takerItem.length; ++y) {
+    for (uint256 y = 0; y < _params.takerItem.length; ) {
       takerItemHash[y] = _hashItem(_params.takerItem[y]);
-      // unchecked { ++y; }
+      unchecked { ++y; }
     }
 
     return keccak256(
