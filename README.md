@@ -7,7 +7,7 @@ Using [Foundry](https://book.getfoundry.sh)
 
 ### Clone the repository
 ```
-git clone 
+git clone git@github.com:Chinoiserie1/Marketplace.git
 ```
 ### Instal dependencies
 ```
