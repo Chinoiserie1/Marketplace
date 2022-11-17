@@ -3,12 +3,18 @@ pragma solidity ^0.8.13;
 
 import "../lib/forge-std/src/Test.sol";
 
+/**
+ * @title Access
+ * @author chixx.eth
+ * @notice contract for access and safety
+ */
 contract Access {
   address public owner;
-  mapping (address => bool) contractApproved;
-  uint256 constant ENTER = 1;
+  mapping(address => bool) public contractApproved;
+  uint256 private constant ENTER = 1;
   uint256 private POSITION;
 
+  event RevokeApprovedContract(address contractRevoked);
   event NewContractApproved(address newContract);
   event OwnershipTransfered(address previouOwner, address newOwner);
 
@@ -68,6 +74,18 @@ contract Access {
       sstore(slotContract, 1)
       // keccak256("NewContractApproved(address)")
       let signatureHash := 0x85728e6da5ad1350686332cbc8bada33be9812d951b89c897a3e1da36bad5462
+      log1(0x00, 0x20, signatureHash)
+    }
+  }
+
+  function revokeContract(address contractToRevoke) external onlyOwner {
+    assembly {
+      mstore(0x00, contractToRevoke)
+      mstore(0x20, contractApproved.slot)
+      let slotContract := keccak256(0x00, 0x40)
+      sstore(slotContract, 0)
+      // keccak256("RevokeApprovedContract(address)")
+      let signatureHash := 0x98acdfa05fd1e589fe19630b7c00b4a55326147657652b9831458ff097266a9a
       log1(0x00, 0x20, signatureHash)
     }
   }

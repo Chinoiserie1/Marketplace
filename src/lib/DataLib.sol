@@ -6,6 +6,11 @@ struct Order {
   bytes signature;
 }
 
+struct ExtraParameters {
+  uint256 index; // for partial trade
+  uint256 plage; // timestamp for dutch auction
+}
+
 struct OrderParameters {
   address sender;
   address taker;

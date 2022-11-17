@@ -11,10 +11,40 @@ import {
   ItemType
 } from "./lib/DataLib.sol";
 
+import { IConduit } from "./Interface/IConduit.sol";
+import { TransferItem, TransferType } from "./lib/ConduitLib.sol";
+
 import { Access } from "./Access.sol";
 import { TransferManager } from "./TransferManager.sol";
 
-contract Conduit is TransferManager, Access {
+/**
+ * @title Conduit
+ * @author chixx.eth
+ * @notice Conduit transfer controler
+ */
+contract Conduit is IConduit, TransferManager, Access {
+
+  function execute(TransferItem[] calldata items) external onlyApproved reantrancyGuard {
+    uint256 itemLength = items.length;
+
+    for (uint256 i; i < itemLength; ) {
+      execTransfer(items[i]);
+      unchecked { ++i; }
+    }
+  }
+
+  function execTransfer(TransferItem calldata item) internal {
+    if (item.itemType == TransferType.ERC20) {
+      _transferERC20(item.token, item.from, item.to, item.amount);
+    }
+    if (item.itemType == TransferType.ERC721) {
+      if (item.amount != 1) revert InvalidAmount();
+      _transferERC721(item.token, item.from, item.to, item.tokenId);
+    }
+    if (item.itemType == TransferType.ERC1155) {
+      _transferERC1155(item.token, item.from, item.to, item.tokenId, item.amount);
+    }
+  }
 
   function transferControler(
     address sender,
@@ -26,8 +56,10 @@ contract Conduit is TransferManager, Access {
     onlyApproved
     reantrancyGuard
   {
+    uint256 itemsSenderLength = itemsSender.length;
+    uint256 itemsTakerLength = itemsTaker.length;
     // logic
-    for (uint256 i = 0; i < itemsSender.length; ) {
+    for (uint256 i; i < itemsSenderLength; ) {
       if (itemsSender[i].itemType == ItemType.ERC20) {
         _transferERC20(itemsSender[i].token, sender, receiver, itemsSender[i].startAmount);
       }
@@ -39,7 +71,7 @@ contract Conduit is TransferManager, Access {
       }
       unchecked { ++i; }
     }
-    for (uint256 i = 0; i < itemsTaker.length; ) {
+    for (uint256 i; i < itemsTakerLength; ) {
       if (itemsSender[i].itemType == ItemType.ERC20) {
         _transferERC20(itemsSender[i].token, receiver, sender, itemsSender[i].startAmount);
       }

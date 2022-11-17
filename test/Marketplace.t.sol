@@ -117,11 +117,14 @@ contract MarketplaceTest is Test {
   }
 
   function testDisplay() public {
+    console.logBytes(abi.encodeWithSignature("chixx.eth"));
     console.logBytes(abi.encodeWithSignature("FailTransferETH()"));
     console.logBytes(abi.encodeWithSignature("InvalidSignature()"));
     console.logBytes(abi.encodeWithSignature("AccessDenied()"));
     console.logBytes(abi.encodeWithSignature("OnlyOwner()"));
     console.logBytes(abi.encodeWithSignature("Reantrancy()"));
+    console.logBytes(abi.encodeWithSignature("InvalidTime()"));
+    console.logBytes32(keccak256("RevokeApprovedContract(address)"));
     console.logBytes32(keccak256("NewContractApproved(address)"));
     console.logBytes32(keccak256("OwnershipTransfered(address,address)"));
     console.logBytes32(keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"));

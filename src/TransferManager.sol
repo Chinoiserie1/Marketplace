@@ -37,6 +37,7 @@ contract TransferManager {
 
   function _transferERC20(address _token, address _from, address _to, uint256 _amount) internal {
     assembly {
+      let slot0x40 := mload(0x40)
       mstore(0x00, ERC20_transferfrom_sign)
       mstore(0x04, _from)
       mstore(0x24, _to)
@@ -46,13 +47,14 @@ contract TransferManager {
         revert (0x00, returndatasize())
       }
       // restore zero && free memory ptr
-      mstore(0x40, 0x80)
+      mstore(0x40, slot0x40)
       mstore(0x60, 0)
     }
   }
 
   function _transferERC721(address _token, address _from, address _to, uint256 _id) internal {
     assembly {
+      let slot0x40 := mload(0x40)
       mstore(0x00, ERC20_transferfrom_sign)
       mstore(0x04, _from)
       mstore(0x24, _to)
@@ -62,7 +64,7 @@ contract TransferManager {
         revert (0x00, returndatasize())
       }
       // restore zero && free memory ptr
-      mstore(0x40, 0x80)
+      mstore(0x40, slot0x40)
       mstore(0x60, 0)
     }
   }
@@ -73,7 +75,8 @@ contract TransferManager {
     internal
   {
     assembly {
-      // save slots [0x80-0xa0-0xc0]
+      // save slots [0x40-0x80-0xa0-0xc0]
+      let slot0x40 := mload(0x40)
       let slot0x80 := mload(0x80)
       let slot0xA0 := mload(0xA0)
       let slot0xC0 := mload(0xC0)
@@ -89,7 +92,7 @@ contract TransferManager {
         revert (0x00, returndatasize())
       }
       // restore memory, zero slot & free memory ptr
-      mstore(0x40, 0x80)
+      mstore(0x40, slot0x40)
       mstore(0x80, slot0x80)
       mstore(0xa0, slot0xA0)
       mstore(0xc0, slot0xC0)

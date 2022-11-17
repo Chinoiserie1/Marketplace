@@ -8,26 +8,42 @@ import {
   OrderParameters
 } from "./lib/DataLib.sol";
 
-import { Checker } from "./Checker.sol";
+import { FullFiller } from "./FullFiller.sol";
 
 import "./Verification.sol";
 
-contract Marketplace is Checker {
+/**
+ * @title Marketplace
+ * @author chixx.eth 0x5d7e5a17
+ * @notice Trade [ETH, ERC20, ERC721, ERC1155]
+ */
+contract Marketplace is FullFiller {
   bytes32 public DOMAIN_SEPARATOR;
 
   /**
-   * keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)")
+   * Keccak256 (
+   *   keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)")
+   *   keccak256(bytes("Marketplace"))
+   *   keccak256(bytes("1"))
+   *   block.chainid
+   *   address(this)
+   * )
    */
   constructor() {
-    DOMAIN_SEPARATOR = keccak256(
-      abi.encode(
-        bytes32(0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f),
-        keccak256(bytes("Marketplace")),
-        keccak256(bytes("1")),
-        block.chainid,
-        address(this)
-      )
-    );
+    assembly {
+      let slot0x40 := mload(0x40)
+      let slot0x80 := mload(0x80)
+      mstore(0x00, 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f)
+      mstore(0x20, 0x893ab71b0c6fc92bef28fc4ee2bc8018ee56220e13f8a287176138660baa87c4)
+      mstore(0x40, 0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6)
+      mstore(0x60, chainid())
+      mstore(0x80, address())
+      sstore(DOMAIN_SEPARATOR.slot, keccak256(0x00, 0xa0))
+      // reset default value
+      mstore(0x40, slot0x40)
+      mstore(0x60, 0)
+      mstore(0x80, slot0x80)
+    }
   }
 
   function name() public pure returns (string memory) {
@@ -37,14 +53,14 @@ contract Marketplace is Checker {
   function matchOrder(Order calldata order) external payable returns(bool) {
     // verify signature is valid
     bytes32 orderHash = Verification._deriveOrderParametersHash(order.parameters);
-    // bytes32 digest = Verification._getHash(DOMAIN_SEPARATOR, orderHash);
-    // address signer = Verification._verifySignature(digest, order.signature);
+    bytes32 digest = Verification._getHash(DOMAIN_SEPARATOR, orderHash);
+    address signer = Verification._verifySignature(digest, order.signature);
     // console.log("signer in contract = ");
     // console.log(signer);
     
-    // check if order can be fullfill
+    // execute match order
+    fullFillOrder(order.parameters);
 
-    // performs transfer
     return true;
   }
 
@@ -63,6 +79,7 @@ contract Marketplace is Checker {
 
   //   return true;
   // }
+
 /**
  * calldata {see Datalib.sol}
  * [0x00 - 0x04] name of the function
